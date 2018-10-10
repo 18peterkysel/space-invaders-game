@@ -70,8 +70,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\peter\OneDrive\Desktop\SDL_libs\SDL2_image-2.0.3\include;C:\Users\peter\OneDrive\Desktop\SDL_libs\SDL2-2.0.8\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\peter\OneDrive\Desktop\SDL_libs\SDL2_image-2.0.3\lib\x86;C:\Users\peter\OneDrive\Desktop\SDL_libs\SDL2-2.0.8\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\peter\source\repos\InvadersGameSDL\SDL_libs\SDL2-2.0.8\include;C:\Users\peter\source\repos\InvadersGameSDL\SDL_libs\SDL2_image-2.0.3\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\peter\source\repos\InvadersGameSDL\SDL_libs\SDL2-2.0.8\lib\x86;C:\Users\peter\source\repos\InvadersGameSDL\SDL_libs\SDL2_image-2.0.3\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
