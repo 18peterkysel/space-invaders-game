@@ -19,4 +19,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\alien_boss.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\alien_easy.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\alien_hard.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\alien_medium.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\shipInvaders.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
 </Project>

@@ -133,6 +133,13 @@
   <ItemGroup>
     <ClCompile Include="main.c" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\alien_boss.png" />
+    <Image Include="resources\alien_easy.png" />
+    <Image Include="resources\alien_hard.png" />
+    <Image Include="resources\alien_medium.png" />
+    <Image Include="resources\shipInvaders.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
