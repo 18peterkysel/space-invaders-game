@@ -38,13 +38,10 @@ typedef struct {
 	SDL_Surface* imageSurf;
 	SDL_Texture* imageText;
 	SDL_Rect* imageRect;
-	const char* imageName;
-} Entity;
 
-typedef struct {
-	Entity entity;
+	const char* imageName;
 	int health;
-} Alien;
+} Entity;
 
 // Support functions
 SDL_Window* init()
@@ -74,34 +71,34 @@ SDL_Window* init()
 	return window;
 }
 
-Alien* createAliens(SDL_Renderer* renderer) {
-	Alien* aliens = malloc(4 * sizeof(Alien));
+Entity* createAliens(SDL_Renderer* renderer) {
+	Entity* aliens = malloc(4 * sizeof(Entity));
 
 	// Create aliens
 	for (int i = 0; i < 4; i++) {
-		aliens[i].entity.imageRect = (SDL_Rect*)malloc(sizeof(SDL_Rect));
+		aliens[i].imageRect = (SDL_Rect*)malloc(sizeof(SDL_Rect));
 	}
 
 	// Set names of images to aliens
-	aliens[0].entity.imageName = GET_RESOURCE_PATH("alien_easy.png");
-	aliens[1].entity.imageName = GET_RESOURCE_PATH("alien_medium.png");
-	aliens[2].entity.imageName = GET_RESOURCE_PATH("alien_hard.png");
-	aliens[3].entity.imageName = GET_RESOURCE_PATH("alien_boss.png");
+	aliens[0].imageName = GET_RESOURCE_PATH("alien_easy.png");
+	aliens[1].imageName = GET_RESOURCE_PATH("alien_medium.png");
+	aliens[2].imageName = GET_RESOURCE_PATH("alien_hard.png");
+	aliens[3].imageName = GET_RESOURCE_PATH("alien_boss.png");
 
 	// Set surface, texture, position and size of aliens
 	int offsetEntity = 2;
 	for (int i = 0; i < 4; i++) {
 		// Set surface and texture of alien image
-		aliens[i].entity.imageSurf = IMG_Load(aliens[i].entity.imageName);
-		aliens[i].entity.imageText = SDL_CreateTextureFromSurface(renderer, aliens[i].entity.imageSurf);
+		aliens[i].imageSurf = IMG_Load(aliens[i].imageName);
+		aliens[i].imageText = SDL_CreateTextureFromSurface(renderer, aliens[i].imageSurf);
 
 		// Set postion of each alien
-		aliens[i].entity.imageRect->x = offsetEntity;
-		aliens[i].entity.imageRect->y = 0;
+		aliens[i].imageRect->x = offsetEntity;
+		aliens[i].imageRect->y = 0;
 
 		// Set size of each alien
-		aliens[i].entity.imageRect->w = ENTITY_SIZE;
-		aliens[i].entity.imageRect->h = ENTITY_SIZE;
+		aliens[i].imageRect->w = ENTITY_SIZE;
+		aliens[i].imageRect->h = ENTITY_SIZE;
 
 		// Make small space between aliens => + 2
 		offsetEntity += ENTITY_SIZE + 2;
@@ -131,10 +128,10 @@ Entity* createShip(SDL_Renderer* renderer) {
 	return ship;
 }
 
-int moveAliens(Alien* aliens, int elapsedTicks, int* direction) {
+int moveAliens(Entity* aliens, int elapsedTicks, int* direction) {
 	bool edgeCollision = false;
 	for (int i = 0; i < ALIEN_COUNT; i++) {
-		SDL_Rect* alienPos = aliens[i].entity.imageRect;
+		SDL_Rect* alienPos = aliens[i].imageRect;
 		if ((*direction) == ALIEN_DIRECTION_RIGHT) {
 			if (alienPos->x + ALIEN_HORIZONTAL_SPEED > SCREEN_WIDTH - ENTITY_SIZE) {
 				edgeCollision = true;
@@ -150,14 +147,14 @@ int moveAliens(Alien* aliens, int elapsedTicks, int* direction) {
 	}
 	if (edgeCollision) {
 		for (int i = 0; i < ALIEN_COUNT; i++) {
-			SDL_Rect* alienPos = aliens[i].entity.imageRect;
+			SDL_Rect* alienPos = aliens[i].imageRect;
 			alienPos->y += ALIEN_VERTICAL_SPEED;
 		}
 	}
 	else {
 		int moveBy = ALIEN_HORIZONTAL_SPEED * elapsedTicks * (*direction);
 		for (int i = 0; i < ALIEN_COUNT; i++) {
-			SDL_Rect* alienPos = aliens[i].entity.imageRect;
+			SDL_Rect* alienPos = aliens[i].imageRect;
 			alienPos->x += moveBy;
 		}
 	}
@@ -198,19 +195,19 @@ void handleShipMovement(const Uint8 *keystate, int elapsedTicks, Entity* ship) {
 	}
 }
 
-void render(SDL_Renderer* renderer, Entity* ship, Alien* aliens) {
+void render(SDL_Renderer* renderer, Entity* ship, Entity* aliens) {
 	SDL_RenderClear(renderer);
 
 	// Set background color to renderer, copy to renderer ship texture with new postion and present renderer
 	SDL_SetRenderDrawColor(renderer, R, G, B, 255);
 	SDL_RenderCopy(renderer, ship->imageText, NULL, ship->imageRect);
 	for (int i = 0; i < 4; i++)
-		SDL_RenderCopy(renderer, aliens[i].entity.imageText, NULL, aliens[i].entity.imageRect);
+		SDL_RenderCopy(renderer, aliens[i].imageText, NULL, aliens[i].imageRect);
 
 	SDL_RenderPresent(renderer);
 }
 
-void gameloop(SDL_Renderer* renderer, Entity* ship, Alien* aliens) {
+void gameloop(SDL_Renderer* renderer, Entity* ship, Entity* aliens) {
 	SDL_Event event;
 	Uint8* keystate;
 	int alienDirection = ALIEN_DIRECTION_RIGHT;
@@ -269,7 +266,7 @@ int main(int argc, char* args[])
 
 	Entity* ship = createShip(renderer);
 
-	Alien* aliens = createAliens(renderer);
+	Entity* aliens = createAliens(renderer);
 
 	gameloop(renderer, ship, aliens);
 
