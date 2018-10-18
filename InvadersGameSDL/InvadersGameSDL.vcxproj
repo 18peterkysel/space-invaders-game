@@ -138,7 +138,7 @@
     <Image Include="resources\alien_easy.png" />
     <Image Include="resources\alien_hard.png" />
     <Image Include="resources\alien_medium.png" />
-    <Image Include="resources\bullet _alien.png" />
+    <Image Include="resources\bullet_alien.png" />
     <Image Include="resources\bullet_ship.png" />
     <Image Include="resources\shipInvaders.png" />
   </ItemGroup>

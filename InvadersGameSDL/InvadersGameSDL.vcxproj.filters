@@ -35,10 +35,10 @@
     <Image Include="resources\shipInvaders.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="resources\bullet _alien.png">
+    <Image Include="resources\bullet_ship.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="resources\bullet_ship.png">
+    <Image Include="resources\bullet_alien.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
