@@ -157,8 +157,8 @@ Object* createBullet(Entity* entity, SDL_Renderer* renderer, bool setAlienBullet
 	}
 
 	// Set image texture
-	// TODO: if alien bullet, image texture is NULL
 	bullet->imageText = IMG_LoadTexture(renderer, bullet->imageName);
+	char* a = SDL_GetError();
 
 	int x = entity[position].object.imageRect->x;
 	int y = entity[position].object.imageRect->y;
@@ -401,7 +401,7 @@ void gameloop(SDL_Renderer* renderer) {
 	int shipBulletCount = 0;
 	Object* ship_bullets = (Object*)malloc(0 * sizeof(Object));
 
-	int alienBulletCount = 0, alienBulletRelease = 3;
+	int alienBulletCount = 0, alienBulletRelease = 10;
 	Object* alien_bullets = (Object*)malloc(0 * sizeof(Object));
 
 	// variable time-step
@@ -442,8 +442,8 @@ void gameloop(SDL_Renderer* renderer) {
 				// fire alien bullet every third render
 				alienBulletRelease--;
 				if (alienBulletRelease <= 0 && alienCount > 0) {
-					fireBullet(render, aliens, &alien_bullets, &alienBulletCount, true, &alienCount);
-					alienBulletRelease = 3;
+					fireBullet(renderer, aliens, &alien_bullets, &alienBulletCount, true, &alienCount);
+					alienBulletRelease = 10;
 				}
 
 				moveBullets(alien_bullets, alienBulletCount, ship_bullets, shipBulletCount);
