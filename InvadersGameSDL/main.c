@@ -7,6 +7,7 @@
 
 #define SCREEN_WIDTH  1024
 #define SCREEN_HEIGHT 768
+#define SCREEN_OFFSET (SCREEN_HEIGHT/4)
 #define ENTITY_SIZE   30
 #define BULLET_SIZE_WIDTH 50
 #define BULLET_SIZE_HEIGHT 20
@@ -428,20 +429,43 @@ void evaluateCollisions(Object** bullets, int* bulletCount, Entity** entities, i
 }
 
 Text* createText(SDL_Renderer* renderer, TTF_Font* font, SDL_Color color, char* text, int x, int y) {
-	SDL_Surface* textSurface = TTF_RenderText_Solid(font, text, color);
-	SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
 
 	Text* b = (Text*)malloc(sizeof(Text));
-	b->texture = textTexture;
+
+	SDL_Surface* textSurface = TTF_RenderText_Solid(font, text, color);
 	b->rect = (SDL_Rect*)malloc(sizeof(SDL_Rect));
 	b->rect->w = textSurface->w;
 	b->rect->h = textSurface->h;
 	b->rect->x = x - (b->rect->w / 2);
 	b->rect->y = y;
+
+	SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+	b->texture = textTexture;
+
+	b->buttonText = (char*)malloc((strlen(text) + 1) * sizeof(char));
 	b->buttonText = text;
 
 	SDL_FreeSurface(textSurface);
 	return b;
+}
+
+void destroyText(SDL_Renderer* renderer, Text* text) {
+	SDL_DestroyTexture(text->texture);
+	free(text->rect);
+	free(text);
+}
+
+void renderText(SDL_Renderer* renderer, char* rawText, TTF_Font* font, SDL_Color color, int offset, int delay) {
+	SDL_RenderClear(renderer);
+
+	Text* text = (Text*)malloc(sizeof(Text));
+	text = createText(renderer, font, color, rawText, SCREEN_WIDTH / 2, offset);
+
+	SDL_RenderCopy(renderer, text->texture, NULL, text->rect);
+	SDL_RenderPresent(renderer);
+	SDL_Delay(delay);
+
+	destroyText(renderer, text);
 }
 
 void renderMenu(SDL_Renderer* renderer, Menu* menu, int selected, int menuState) {
@@ -536,28 +560,22 @@ void createMenuState(SDL_Renderer* renderer,  Menu* menu, int menuState) {
 	}
 }
 
-void renderLevel(SDL_Renderer* renderer, int levelNumber) {
-	SDL_RenderClear(renderer);
-
-	char* levelText;
-	if (levelNumber == 1)
-		levelText = "Level ONE";
-	else if (levelNumber == 2)
-		levelText = "Level TWO";
-	else
-		levelText = "Boss";
-
-	int offset = SCREEN_HEIGHT / 4;
-	Text* level = (Text*)malloc(sizeof(Text));
+void renderTextLevel(SDL_Renderer* renderer, int levelNumber) {
 	TTF_Font* font = TTF_OpenFont(GET_RESOURCE_PATH("Agrem.ttf"), 64);
 	SDL_Color whiteColor = WHITE_COLOR;
 
-	level = createText(renderer, font, whiteColor, levelText, SCREEN_WIDTH / 2, offset);
-	SDL_RenderCopy(renderer, level->texture, NULL, level->rect);
-	SDL_RenderPresent(renderer);
-
-	// sleep 3 seconds
-	SDL_Delay(3000);
+	int delay = 3000;
+	if (levelNumber == 1) {
+		renderText(renderer, "Level one", font, whiteColor, SCREEN_OFFSET, delay);
+	}
+	else if (levelNumber == 2) {
+		renderText(renderer, "Level one Complete", font, whiteColor, SCREEN_OFFSET, delay);
+		renderText(renderer, "Level two", font, whiteColor, SCREEN_OFFSET, delay);
+	}
+	else {
+		renderText(renderer, "Level two Complete", font, whiteColor, SCREEN_OFFSET, delay);
+		renderText(renderer, "Boss", font, whiteColor, SCREEN_OFFSET, delay);
+	}
 }
 
 void gameloop(SDL_Renderer* renderer) {
@@ -631,8 +649,11 @@ void gameloop(SDL_Renderer* renderer) {
 				else {
 					gameState = GAME_STATE_MENU;
 					menuState = MENU_STATE_GAME_OVER;
+
+					actualLevel = 1;
+					alienCount = ALIEN_COUNT;
+					aliens = createAliens(renderer, aliens);
 					createMenuState(renderer, menu, menuState);
-					// TODO: reinitialize game state (aliens, ship, bullets etc.)
 				}
 
 				if (alienCount > 0) {
@@ -644,9 +665,13 @@ void gameloop(SDL_Renderer* renderer) {
 					}
 				}
 				else {
+					while (shipBulletCount != 0) {
+						destroyBullet(&ship_bullets, &ship_bullets[shipBulletCount - 1], &shipBulletCount);
+					}
+
 					if (actualLevel < 3) {
 						actualLevel++;
-						renderLevel(renderer, actualLevel);
+						renderTextLevel(renderer, actualLevel);
 					}
 					else
 					{
@@ -654,9 +679,6 @@ void gameloop(SDL_Renderer* renderer) {
 						menuState = MENU_STATE_VICTORY;
 						continue;
 					}
-					// destroy all ship bullets
-					while (shipBulletCount != 0)
-						destroyBullet(&ship_bullets, &ship_bullets[shipBulletCount-1], &shipBulletCount);
 
 					alienCount = ALIEN_COUNT;
 					aliens = createAliens(renderer, aliens);
@@ -681,8 +703,9 @@ void gameloop(SDL_Renderer* renderer) {
 					case SDLK_RETURN:
 					case SDLK_KP_ENTER:
  						gameState = selected == MENU_SELECTED_PLAY ? GAME_STATE_PLAY : GAME_STATE_QUIT;
-						if (gameState == GAME_STATE_PLAY)
-							renderLevel(renderer, actualLevel);
+						if (gameState == GAME_STATE_PLAY) {
+							renderTextLevel(renderer, actualLevel);
+						}
 					}
 				}
 				renderMenu(renderer, menu, selected, menuState);
