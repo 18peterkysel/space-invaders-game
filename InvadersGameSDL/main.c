@@ -46,6 +46,9 @@
 
 #define GET_RESOURCE_PATH(res_name) "resources/"res_name
 
+#define RED_COLOR { 255,40,40 }
+#define WHITE_COLOR { 255,255,255 }
+
 // Define background color in R, G, B
 #define R 0
 #define G 0
@@ -66,14 +69,14 @@ typedef struct {
 typedef struct {
 	SDL_Texture* texture;
 	SDL_Rect* rect;
-	char* textButton;
-} TextButton;
+	char* buttonText;
+} Text;
 
 typedef struct {
-	TextButton* header;
+	Text* header;
 	TTF_Font* headerFont;
-	TextButton** menuButtons;
-	TTF_Font* textButtonFont;
+	Text** menuButtons;
+	TTF_Font* buttonTextFont;
 	int countButton;
 } Menu;
 
@@ -110,12 +113,12 @@ SDL_Window* initializeSdl()
 	return window;
 }
 
-Entity* createAliens(SDL_Renderer* renderer, int *alienCount) {
-	*alienCount = ALIEN_COUNT;
-	Entity* aliens = (Entity*)malloc(*alienCount * sizeof(Entity));
+Entity* createAliens(SDL_Renderer* renderer, Entity* aliens) {
+	if (aliens == NULL)
+		aliens = (Entity*)malloc(ALIEN_COUNT * sizeof(Entity));
 
 	// Create aliens
-	for (int i = 0; i < *alienCount; i++) {
+	for (int i = 0; i < ALIEN_COUNT; i++) {
 		aliens[i].object.imageRect = (SDL_Rect*)malloc(sizeof(SDL_Rect));
 		aliens[i].health = ALIEN_HEALTH;
 	}
@@ -151,6 +154,7 @@ Entity* createAliens(SDL_Renderer* renderer, int *alienCount) {
 			colOffset += ENTITY_SIZE + 2;
 		}
 	}
+
 	return aliens;
 }
 
@@ -303,9 +307,8 @@ void render(SDL_Renderer* renderer, Entity* ship, Entity* aliens, int alienCount
 //	SDL_SetRenderDrawColor(renderer, R, G, B, 255);
 	SDL_RenderClear(renderer);
 
-	if (ship) {
+	if (ship)
 		SDL_RenderCopy(renderer, ship->object.imageText, NULL, ship->object.imageRect);
-	}
 
 	for (int i = 0; i < alienCount; i++)
 		SDL_RenderCopy(renderer, aliens[i].object.imageText, NULL, aliens[i].object.imageRect);
@@ -424,18 +427,18 @@ void evaluateCollisions(Object** bullets, int* bulletCount, Entity** entities, i
 	}
 }
 
-TextButton* createTextButton(SDL_Renderer* renderer, TTF_Font* font, SDL_Color color, char* text, int x, int y) {
+Text* createText(SDL_Renderer* renderer, TTF_Font* font, SDL_Color color, char* text, int x, int y) {
 	SDL_Surface* textSurface = TTF_RenderText_Solid(font, text, color);
 	SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
 
-	TextButton* b = (TextButton*)malloc(sizeof(TextButton));
+	Text* b = (Text*)malloc(sizeof(Text));
 	b->texture = textTexture;
 	b->rect = (SDL_Rect*)malloc(sizeof(SDL_Rect));
 	b->rect->w = textSurface->w;
 	b->rect->h = textSurface->h;
 	b->rect->x = x - (b->rect->w / 2);
 	b->rect->y = y;
-	b->textButton = text;
+	b->buttonText = text;
 
 	SDL_FreeSurface(textSurface);
 	return b;
@@ -449,7 +452,7 @@ void renderMenu(SDL_Renderer* renderer, Menu* menu, int selected, int menuState)
 		SDL_RenderCopy(renderer, menu->menuButtons[i]->texture, NULL, menu->menuButtons[i]->rect);
 	}
 	
-	char* namePlayButton = menu->menuButtons[0]->textButton;
+	char* namePlayButton = menu->menuButtons[0]->buttonText;
 	for (int i = 0; i < menu->countButton; i++) {
 		SDL_DestroyTexture(menu->menuButtons[i]->texture);
 		free(menu->menuButtons[i]->rect);
@@ -463,13 +466,13 @@ void renderMenu(SDL_Renderer* renderer, Menu* menu, int selected, int menuState)
 	int indexButton = selected == MENU_SELECTED_PLAY ? 0 : 1;
 
 	if (indexButton == 0) {
-		menu->menuButtons[0] = createTextButton(renderer, menu->textButtonFont, textColorRed, namePlayButton, SCREEN_WIDTH / 2, offset * 2);
-		menu->menuButtons[1] = createTextButton(renderer, menu->textButtonFont, textColorWhite, "Quit", SCREEN_WIDTH / 2, offset * 3);
+		menu->menuButtons[0] = createText(renderer, menu->buttonTextFont, textColorRed, namePlayButton, SCREEN_WIDTH / 2, offset * 2);
+		menu->menuButtons[1] = createText(renderer, menu->buttonTextFont, textColorWhite, "Quit", SCREEN_WIDTH / 2, offset * 3);
 	}
 	else
 	{
-		menu->menuButtons[0] = createTextButton(renderer, menu->textButtonFont, textColorWhite, namePlayButton, SCREEN_WIDTH / 2, offset * 2);
-		menu->menuButtons[1] = createTextButton(renderer, menu->textButtonFont, textColorRed, "Quit", SCREEN_WIDTH / 2, offset * 3);
+		menu->menuButtons[0] = createText(renderer, menu->buttonTextFont, textColorWhite, namePlayButton, SCREEN_WIDTH / 2, offset * 2);
+		menu->menuButtons[1] = createText(renderer, menu->buttonTextFont, textColorRed, "Quit", SCREEN_WIDTH / 2, offset * 3);
 	}
 	SDL_RenderPresent(renderer);
 }
@@ -478,7 +481,7 @@ Menu* initMenu() {
 	Menu* menu = (Menu*)malloc(sizeof(Menu));
 
 	menu->headerFont = TTF_OpenFont(GET_RESOURCE_PATH("Agrem.ttf"), 64);
-	menu->textButtonFont = TTF_OpenFont(GET_RESOURCE_PATH("Agrem.ttf"), 48);
+	menu->buttonTextFont = TTF_OpenFont(GET_RESOURCE_PATH("Agrem.ttf"), 48);
 	menu->menuButtons = NULL;
 	menu->countButton = -1;
 
@@ -500,36 +503,61 @@ void createMenuState(SDL_Renderer* renderer,  Menu* menu, int menuState) {
 	}
 
 	int offset = SCREEN_HEIGHT / 4;
-	SDL_Color headerColor = { 255,40,40 };
-	SDL_Color textColorRed = { 240,15,15 };
-	SDL_Color textColorWhite = { 255,255,255 };
+	SDL_Color redColor = RED_COLOR;
+	SDL_Color whiteColor = WHITE_COLOR;
+
 	menu->countButton = 2;
+
 	switch (menuState) {
 	case MENU_STATE_WELCOME:
-		menu->header = (TextButton*)malloc(sizeof(TextButton));
-		menu->header = createTextButton(renderer, menu->headerFont, headerColor, "Space Invaders", SCREEN_WIDTH / 2, offset);
+		menu->header = (Text*)malloc(sizeof(Text));
+		menu->header = createText(renderer, menu->headerFont, redColor, "Space Invaders", SCREEN_WIDTH / 2, offset);
 
-		menu->menuButtons = (TextButton**)malloc(menu->countButton * sizeof(TextButton*));
-		menu->menuButtons[0] = createTextButton(renderer, menu->textButtonFont, textColorRed, "Play", SCREEN_WIDTH / 2, offset * 2);
-		menu->menuButtons[1] = createTextButton(renderer, menu->textButtonFont, textColorWhite, "Quit", SCREEN_WIDTH / 2, offset * 3);
+		menu->menuButtons = (Text**)malloc(menu->countButton * sizeof(Text*));
+		menu->menuButtons[0] = createText(renderer, menu->buttonTextFont, redColor, "Play", SCREEN_WIDTH / 2, offset * 2);
+		menu->menuButtons[1] = createText(renderer, menu->buttonTextFont, whiteColor, "Quit", SCREEN_WIDTH / 2, offset * 3);
 		break;
 	case MENU_STATE_GAME_OVER:
-		menu->header = (TextButton*)malloc(sizeof(TextButton));
-		menu->header = createTextButton(renderer, menu->headerFont, headerColor, "Game over", SCREEN_WIDTH / 2, offset);
+		menu->header = (Text*)malloc(sizeof(Text));
+		menu->header = createText(renderer, menu->headerFont, redColor, "Game over", SCREEN_WIDTH / 2, offset);
 
-		menu->menuButtons = (TextButton**)malloc(menu->countButton * sizeof(TextButton*));
-		menu->menuButtons[0] = createTextButton(renderer, menu->textButtonFont, textColorRed, "Replay", SCREEN_WIDTH / 2, offset * 2);
-		menu->menuButtons[1] = createTextButton(renderer, menu->textButtonFont, textColorWhite, "Quit", SCREEN_WIDTH / 2, offset * 3);
+		menu->menuButtons = (Text**)malloc(menu->countButton * sizeof(Text*));
+		menu->menuButtons[0] = createText(renderer, menu->buttonTextFont, redColor, "Replay", SCREEN_WIDTH / 2, offset * 2);
+		menu->menuButtons[1] = createText(renderer, menu->buttonTextFont, whiteColor, "Quit", SCREEN_WIDTH / 2, offset * 3);
 		break;
 	case MENU_STATE_VICTORY:
-		menu->header = (TextButton*)malloc(sizeof(TextButton));
-		menu->header = createTextButton(renderer, menu->headerFont, headerColor, "Congratulations", SCREEN_WIDTH / 2, offset);
+		menu->header = (Text*)malloc(sizeof(Text));
+		menu->header = createText(renderer, menu->headerFont, redColor, "Congratulations", SCREEN_WIDTH / 2, offset);
 
-		menu->menuButtons = (TextButton**)malloc(menu->countButton * sizeof(TextButton*));
-		menu->menuButtons[0] = createTextButton(renderer, menu->textButtonFont, textColorRed, "Replay", SCREEN_WIDTH / 2, offset * 2);
-		menu->menuButtons[1] = createTextButton(renderer, menu->textButtonFont, textColorWhite, "Quit", SCREEN_WIDTH / 2, offset * 3);
+		menu->menuButtons = (Text**)malloc(menu->countButton * sizeof(Text*));
+		menu->menuButtons[0] = createText(renderer, menu->buttonTextFont, redColor, "Replay", SCREEN_WIDTH / 2, offset * 2);
+		menu->menuButtons[1] = createText(renderer, menu->buttonTextFont, whiteColor, "Quit", SCREEN_WIDTH / 2, offset * 3);
 		break;
 	}
+}
+
+void renderLevel(SDL_Renderer* renderer, int levelNumber) {
+	SDL_RenderClear(renderer);
+
+	char* levelText;
+	if (levelNumber == 1)
+		levelText = "Level ONE";
+	else if (levelNumber == 2)
+		levelText = "Level TWO";
+	else
+		levelText = "Boss";
+
+	int offset = SCREEN_HEIGHT / 4;
+	Text* level = (Text*)malloc(sizeof(Text));
+	TTF_Font* font = TTF_OpenFont(GET_RESOURCE_PATH("Agrem.ttf"), 64);
+	SDL_Color whiteColor = WHITE_COLOR;
+
+	level = createText(renderer, font, whiteColor, levelText, SCREEN_WIDTH / 2, offset);
+	SDL_RenderCopy(renderer, level->texture, NULL, level->rect);
+	SDL_RenderPresent(renderer);
+
+	// sleep 3 seconds
+	SDL_Delay(3000);
 }
 
 void gameloop(SDL_Renderer* renderer) {
@@ -538,12 +566,13 @@ void gameloop(SDL_Renderer* renderer) {
 	int alienDirection = ALIEN_DIRECTION_RIGHT;
 	int gameState = GAME_STATE_MENU;
 	int menuState = MENU_STATE_WELCOME;
+	int actualLevel = 1;
 
 	int shipCount = 1;
 	Entity* ship = createShip(renderer);
 
-	int alienCount = -1;
-	Entity* aliens = createAliens(renderer, &alienCount);
+	int alienCount = ALIEN_COUNT;
+	Entity* aliens = createAliens(renderer, NULL);;
 
 	int shipBulletCount = 0;
 	Object* ship_bullets = (Object*)malloc(0 * sizeof(Object));
@@ -615,10 +644,22 @@ void gameloop(SDL_Renderer* renderer) {
 					}
 				}
 				else {
-					gameState = GAME_STATE_MENU;
-					menuState = MENU_STATE_VICTORY;
-					createMenuState(renderer, menu, menuState);
-					// TODO: reinitialize game state (aliens, ship, bullets etc.)
+					if (actualLevel < 3) {
+						actualLevel++;
+						renderLevel(renderer, actualLevel);
+					}
+					else
+					{
+						gameState = GAME_STATE_MENU;
+						menuState = MENU_STATE_VICTORY;
+						continue;
+					}
+					// destroy all ship bullets
+					while (shipBulletCount != 0)
+						destroyBullet(&ship_bullets, &ship_bullets[shipBulletCount-1], &shipBulletCount);
+
+					alienCount = ALIEN_COUNT;
+					aliens = createAliens(renderer, aliens);
 				}
 
 				moveBullets(alien_bullets, alienBulletCount, ship_bullets, shipBulletCount);
@@ -637,11 +678,11 @@ void gameloop(SDL_Renderer* renderer) {
 					case SDLK_DOWN:
 						selected = 1;
 						break;
-					case SDLK_SPACE:
-					case SDLK_KP_SPACE:
 					case SDLK_RETURN:
 					case SDLK_KP_ENTER:
  						gameState = selected == MENU_SELECTED_PLAY ? GAME_STATE_PLAY : GAME_STATE_QUIT;
+						if (gameState == GAME_STATE_PLAY)
+							renderLevel(renderer, actualLevel);
 					}
 				}
 				renderMenu(renderer, menu, selected, menuState);
