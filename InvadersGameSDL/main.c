@@ -34,7 +34,7 @@
 #define ALIEN_VERTICAL_SPEED 40
 #define ALIEN_HORIZONTAL_SPEED 8
 #define ALIEN_HORIZONTAL_COUNT 15
-#define ALIEN_VERTICAL_COUNT 3
+#define ALIEN_VERTICAL_COUNT 4
 #define ALIEN_COUNT (ALIEN_HORIZONTAL_COUNT * ALIEN_VERTICAL_COUNT)
 
 #define ALIEN_FIRING_DELAY 8000
@@ -129,8 +129,9 @@ SDL_Window* initializeSdl()
 }
 
 Entity* createAliens(SDL_Renderer* renderer, Entity* aliens) {
-	if (aliens == NULL)
+	if (aliens == NULL) {
 		aliens = (Entity*)malloc(ALIEN_COUNT * sizeof(Entity));
+	}
 
 	// Create aliens
 	for (int i = 0; i < ALIEN_COUNT; i++) {
@@ -359,7 +360,6 @@ void destroyBullet(Object** bullets, Object* bullet, int* bulletCount) {
 
 	SDL_DestroyTexture(bullet->imageText);
 	free(bullet->imageRect);
-	// free(bullet);
 
 	// Remove bullet from bullets array
 	if (position != (*bulletCount - 1)) {
@@ -390,7 +390,6 @@ void destroyEntity(Entity** entities, Entity* entity, int* entitiesCount) {
 	SDL_DestroyTexture(entity->object->imageText);
 	free(entity->object->imageRect);
 	free(entity->object);
-	//free(entity);
 
 	// Remove entity from entities array
 	if (position != (*entitiesCount - 1)) {
@@ -586,7 +585,7 @@ void renderTextLevel(SDL_Renderer* renderer, int levelNumber) {
 	TTF_Font* font = TTF_OpenFont(GET_RESOURCE_PATH("Agrem.ttf"), 64);
 	SDL_Color whiteColor = WHITE_COLOR;
 
-	int delay = 3000;
+	int delay = 1500;
 	if (levelNumber == 1) {
 		renderText(renderer, "Level one", font, whiteColor, SCREEN_OFFSET, delay);
 	}
@@ -632,7 +631,8 @@ Entity* clearAliens(Entity* aliens, int aliensCount) {
 		free(aliens[i].object->imageRect);
 		free(aliens[i].object);
 	}
-	return aliens;
+	free(aliens);
+	return NULL;
 }
 
 void gameloop(SDL_Renderer* renderer) {
@@ -778,11 +778,11 @@ void gameloop(SDL_Renderer* renderer) {
 							shipCount = 1;
 							alienCount = ALIEN_COUNT;
 
-							ship = createShip(renderer, ship);
-							aliens = createAliens(renderer, aliens);
-
 							renderTextLevel(renderer, levelNumber);
 							levelNumber++;
+
+							ship = createShip(renderer, ship);
+							aliens = createAliens(renderer, aliens);
 
 							// first render takes a long-time, so call it here before game-time is considered to avoid big initial lag
 							render(renderer, ship, aliens, alienCount, ship_bullets, shipBulletCount, alien_bullets, alienBulletCount);
@@ -799,7 +799,7 @@ void gameloop(SDL_Renderer* renderer) {
 			SDL_Delay(DELAY);
 		}
 	}
-	// TODO: destroy all left-over textures
+	// TODO: destroy all left-over textures, arrays of bullets (ship, aliens)
 	if (ship) {
 		SDL_DestroyTexture(ship->object->imageText);
 	}
