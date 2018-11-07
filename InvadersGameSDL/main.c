@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #define SCREEN_WIDTH  1024
 #define SCREEN_HEIGHT 768
@@ -363,7 +364,7 @@ void destroyBullet(Object** bullets, Object* bullet, int* bulletCount) {
 
 	// Remove bullet from bullets array
 	if (position != (*bulletCount - 1)) {
-		for (position; position < *bulletCount - 1; position++) {
+		for (; position < *bulletCount - 1; position++) {
 			(*bullets)[position] = (*bullets)[position + 1];
 		}
 	}
@@ -393,7 +394,7 @@ void destroyEntity(Entity** entities, Entity* entity, int* entitiesCount) {
 
 	// Remove entity from entities array
 	if (position != (*entitiesCount - 1)) {
-		for (position; position < *entitiesCount - 1; position++) {
+		for (; position < *entitiesCount - 1; position++) {
 			(*entities)[position] = (*entities)[position + 1];
 		}
 	}
@@ -415,7 +416,7 @@ void evaluateCollisions(Object** bullets, int* bulletCount, Entity** entities, i
 				//       - should not be necessary, should be done for bullets though
 				(*entities)[j].health -= 10;
 				if ((*entities)[j].health <= 0) {
-					if ((*entities)[j].object->imageName == GET_RESOURCE_PATH("shipInvaders.png")) {
+					if (strcmp((*entities)[j].object->imageName, GET_RESOURCE_PATH("shipInvaders.png")) == 0) {
 						Mix_PlayChannel(-1, effects->explosion, 0);
 					}
 					else
