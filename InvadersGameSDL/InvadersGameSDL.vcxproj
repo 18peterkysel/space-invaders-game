@@ -131,7 +131,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="aliens.c" />
+    <ClCompile Include="bullet.c" />
+    <ClCompile Include="effects.c" />
+    <ClCompile Include="entity.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="menu.c" />
+    <ClCompile Include="ship.c" />
+    <ClCompile Include="text.c" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\alien_boss.png" />
@@ -144,6 +151,16 @@
   </ItemGroup>
   <ItemGroup>
     <Font Include="resources\Agrem.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="aliens.h" />
+    <ClInclude Include="bullet.h" />
+    <ClInclude Include="config.h" />
+    <ClInclude Include="effects.h" />
+    <ClInclude Include="entity.h" />
+    <ClInclude Include="menu.h" />
+    <ClInclude Include="ship.h" />
+    <ClInclude Include="text.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

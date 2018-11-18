@@ -18,6 +18,27 @@
     <ClCompile Include="main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="text.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="menu.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="effects.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ship.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bullet.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="aliens.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="entity.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\alien_boss.png">
@@ -46,5 +67,31 @@
     <Font Include="resources\Agrem.ttf">
       <Filter>Resource Files</Filter>
     </Font>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="text.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="config.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="menu.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="effects.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="entity.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ship.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bullet.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="aliens.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
