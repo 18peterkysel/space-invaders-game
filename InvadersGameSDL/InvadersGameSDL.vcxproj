@@ -132,6 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="aliens.c" />
+    <ClCompile Include="animation.c" />
     <ClCompile Include="bullet.c" />
     <ClCompile Include="effects.c" />
     <ClCompile Include="entity.c" />
@@ -147,6 +148,7 @@
     <Image Include="resources\alien_medium.png" />
     <Image Include="resources\bullet_alien.png" />
     <Image Include="resources\bullet_ship.png" />
+    <Image Include="resources\explosion.png" />
     <Image Include="resources\shipInvaders.png" />
   </ItemGroup>
   <ItemGroup>
@@ -154,6 +156,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="aliens.h" />
+    <ClInclude Include="animation.h" />
     <ClInclude Include="bullet.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="effects.h" />

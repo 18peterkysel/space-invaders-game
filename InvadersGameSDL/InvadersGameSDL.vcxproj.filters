@@ -39,6 +39,9 @@
     <ClCompile Include="entity.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="animation.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\alien_boss.png">
@@ -60,6 +63,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="resources\bullet_alien.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\explosion.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
@@ -91,6 +97,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="aliens.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="animation.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

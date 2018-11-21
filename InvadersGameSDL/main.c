@@ -16,6 +16,7 @@
 #include "aliens.h"
 #include "bullet.h"
 #include "effects.h"
+#include "animation.h"
 
 // Define background color in R, G, B
 #define R 0
@@ -62,7 +63,12 @@ SDL_Window* initializeSdl()
 	return window;
 }
 
-void render(SDL_Renderer* renderer, Entity* ship, Entity* aliens, int alienCount, Object* shipBullets, int shipBulletCount, Object* alienBullets, int alienBulletCount) {
+void render(SDL_Renderer* renderer, 
+	Entity* ship, 
+	Entity* aliens, int alienCount, 
+	Animation* animations, int animationCount,
+	Object* shipBullets, int shipBulletCount, 
+	Object* alienBullets, int alienBulletCount) {
 	// Set background color to renderer, copy to renderer ship texture with new postion and present renderer
 //	SDL_SetRenderDrawColor(renderer, R, G, B, 255);
 	SDL_RenderClear(renderer);
@@ -72,6 +78,9 @@ void render(SDL_Renderer* renderer, Entity* ship, Entity* aliens, int alienCount
 
 	for (int i = 0; i < alienCount; i++)
 		SDL_RenderCopy(renderer, aliens[i].object->imageText, NULL, aliens[i].object->imageRect);
+
+	for (int i = 0; i < animationCount; i++)
+		SDL_RenderCopy(renderer, animations[i].object->imageText, animations[i].srcRect, animations[i].object->imageRect);
 
 	for (int i = 0; i < shipBulletCount; i++)
 		SDL_RenderCopy(renderer, shipBullets[i].imageText, NULL, shipBullets[i].imageRect);
@@ -100,14 +109,19 @@ void renderTextLevel(SDL_Renderer* renderer, int levelNumber) {
 	}
 }
 
-void evaluateCollisions(Object** bullets, int* bulletCount, Entity** entities, int* enitiesCount, Effects* effects) {
+void evaluateCollisions(
+	SDL_Renderer* renderer,
+	Object** bullets, int* bulletCount, 
+	Entity** entities, int* entitiesCount, 
+	Animation** animations, int* animationCount,
+	Effects* effects) {
 	int destroyBulletsCount = 0;
 	int destroyEntitiesCount = 0;
-	Object** destroyBullets = (Object**)malloc(sizeof(Object*));;
-	Entity** destroyEntities = (Entity**)malloc(sizeof(Entity*));;
+	Object** destroyBullets = (Object**)malloc(sizeof(Object*));
+	Entity** destroyEntities = (Entity**)malloc(sizeof(Entity*));
 
 	for (int i = 0; i < *bulletCount; i++) {
-		for (int j = 0; j < *enitiesCount; j++) {
+		for (int j = 0; j < *entitiesCount; j++) {
 			if (SDL_HasIntersection((*bullets)[i].imageRect, (*entities)[j].object->imageRect)) {
 				// TODO: Check if alien is already add to destAliens array
 				//       - should not be necessary, should be done for bullets though
@@ -123,6 +137,7 @@ void evaluateCollisions(Object** bullets, int* bulletCount, Entity** entities, i
 					destroyEntities = (Entity**)realloc(destroyEntities, (destroyEntitiesCount + 1) * sizeof(Entity*));
 					destroyEntities[destroyEntitiesCount] = &((*entities)[j]);
 					destroyEntitiesCount++;
+ 					addExplosion(renderer, (*entities)[j].object->imageRect, animations, animationCount);
 				}
 
 				destroyBullets = (Object**)realloc(destroyBullets, (destroyBulletsCount + 1) * sizeof(Object*));
@@ -143,7 +158,27 @@ void evaluateCollisions(Object** bullets, int* bulletCount, Entity** entities, i
 		destroyBullet(bullets, destroyBullets[i], bulletCount);
 	}
 	for (int i = 0; i < destroyEntitiesCount; i++) {
-		destroyEntity(entities, destroyEntities[i], enitiesCount);
+		destroyEntity(entities, destroyEntities[i], entitiesCount);
+	}
+}
+
+void cleanUp(
+	Entity* ship, int* shipCount,
+	Entity* aliens, int* alienCount,
+	Animation* animations, int* animationCount,
+	Object* ship_bullets, int* shipBulletCount,
+	Object* alien_bullets, int* alienBulletCount
+	) {
+	if (ship) {
+		destroyEntity(&ship, ship, shipCount);
+	}
+	aliens = clearAliens(aliens, alienCount);
+	animations = clearAnimations(animations, animationCount);
+	while (*shipBulletCount != 0) {
+		destroyBullet(&ship_bullets, &ship_bullets[*shipBulletCount - 1], shipBulletCount);
+	}
+	while (*alienBulletCount != 0) {
+		destroyBullet(&alien_bullets, &alien_bullets[*alienBulletCount - 1], alienBulletCount);
 	}
 }
 
@@ -160,6 +195,9 @@ void gameloop(SDL_Renderer* renderer) {
 
 	int alienCount = -1;
 	Entity* aliens = NULL; // = createAliens(renderer, NULL);
+
+	int animationCount = 0;
+	Animation* animations = NULL;
 
 	int shipBulletCount = 0;
 	Object* ship_bullets = (Object*)malloc(0 * sizeof(Object));
@@ -251,11 +289,13 @@ void gameloop(SDL_Renderer* renderer) {
 					}
 				}
 
-				moveBullets(alien_bullets, alienBulletCount, ship_bullets, shipBulletCount);
-				evaluateCollisions(&ship_bullets, &shipBulletCount, &aliens, &alienCount, effects);
-				evaluateCollisions(&alien_bullets, &alienBulletCount, &ship, &shipCount, effects);
+				advanceAnimations(&animations, &animationCount);
 
-				render(renderer, ship, aliens, alienCount, ship_bullets, shipBulletCount, alien_bullets, alienBulletCount);
+				moveBullets(alien_bullets, alienBulletCount, ship_bullets, shipBulletCount);
+				evaluateCollisions(renderer, &ship_bullets, &shipBulletCount, &aliens, &alienCount, &animations, &animationCount, effects);
+				evaluateCollisions(renderer, &alien_bullets, &alienBulletCount, &ship, &shipCount, &animations, &animationCount, effects);
+
+				render(renderer, ship, aliens, alienCount, animations, animationCount, ship_bullets, shipBulletCount, alien_bullets, alienBulletCount);
 				break;
 			case GAME_STATE_MENU:
 				if (menuState == MENU_STATE_GAME_OVER || menuState == MENU_STATE_WELCOME || menuState == MENU_STATE_VICTORY) {
@@ -268,8 +308,11 @@ void gameloop(SDL_Renderer* renderer) {
 							destroyBullet(&alien_bullets, &alien_bullets[alienBulletCount - 1], &alienBulletCount);
 						}
 						if (alienCount != 0) {
-							aliens = clearAliens(aliens, alienCount);
+							aliens = clearAliens(aliens, &alienCount);
 							alienCount = 0;
+						}
+						if (animationCount != 0) {
+							animations = clearAnimations(animations, &animationCount);
 						}
 					}
 				}
@@ -297,7 +340,7 @@ void gameloop(SDL_Renderer* renderer) {
 							aliens = createAliens(renderer, aliens);
 
 							// first render takes a long-time, so call it here before game-time is considered to avoid big initial lag
-							render(renderer, ship, aliens, alienCount, ship_bullets, shipBulletCount, alien_bullets, alienBulletCount);
+							render(renderer, ship, aliens, alienCount, animations, animationCount, ship_bullets, shipBulletCount, alien_bullets, alienBulletCount);
 						}
 					}
 				}
@@ -312,9 +355,7 @@ void gameloop(SDL_Renderer* renderer) {
 		}
 	}
 	// TODO: destroy all left-over textures, arrays of bullets (ship, aliens)
-	if (ship) {
-		SDL_DestroyTexture(ship->object->imageText);
-	}
+	cleanUp(ship, &shipCount, aliens, &alienCount, animations, &animationCount, ship_bullets, &shipBulletCount, alien_bullets, &alienBulletCount);
 }
 
 int main(int argc, char* args[])

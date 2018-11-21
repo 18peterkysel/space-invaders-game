@@ -49,13 +49,14 @@ Entity* createAliens(SDL_Renderer* renderer, Entity* aliens) {
 	return aliens;
 }
 
-Entity* clearAliens(Entity* aliens, int aliensCount) {
-	for (int i = 0; i < aliensCount; i++) {
+Entity* clearAliens(Entity* aliens, int* aliensCount) {
+	for (int i = 0; i < *aliensCount; i++) {
 		SDL_DestroyTexture(aliens[i].object->imageText);
 		free(aliens[i].object->imageRect);
 		free(aliens[i].object);
 	}
 	free(aliens);
+	*aliensCount = 0;
 	return NULL;
 }
 
