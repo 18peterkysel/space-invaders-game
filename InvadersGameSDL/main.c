@@ -15,7 +15,7 @@
 #include "ship.h"
 #include "aliens.h"
 #include "bullet.h"
-#include "effects.h"
+#include "soundeffects.h"
 #include "animation.h"
 
 // Define background color in R, G, B
@@ -63,14 +63,14 @@ SDL_Window* initializeSdl()
 	return window;
 }
 
-void render(SDL_Renderer* renderer, 
-	Entity* ship, 
-	Entity* aliens, int alienCount, 
+void render(SDL_Renderer* renderer,
+	Entity* ship,
+	Entity* aliens, int alienCount,
 	Animation* animations, int animationCount,
-	Object* shipBullets, int shipBulletCount, 
+	Object* shipBullets, int shipBulletCount,
 	Object* alienBullets, int alienBulletCount) {
 	// Set background color to renderer, copy to renderer ship texture with new postion and present renderer
-//	SDL_SetRenderDrawColor(renderer, R, G, B, 255);
+	// SDL_SetRenderDrawColor(renderer, R, G, B, 255);
 	SDL_RenderClear(renderer);
 
 	if (ship)
@@ -95,60 +95,93 @@ void renderTextLevel(SDL_Renderer* renderer, int levelNumber) {
 	TTF_Font* font = TTF_OpenFont(GET_RESOURCE_PATH("Agrem.ttf"), 64);
 	SDL_Color whiteColor = WHITE_COLOR;
 
-	int delay = 1500;
+	static const int lvlCompleteDelay = 1000;
+	static const int lnlNextDelay = 100; // reinitializing arrays takes a long enough time by itself
 	if (levelNumber == 1) {
-		renderText(renderer, "Level one", font, whiteColor, SCREEN_OFFSET, delay);
+		renderText(renderer, "Level one", font, whiteColor, SCREEN_VERTICAL_OFFSET, lnlNextDelay);
 	}
 	else if (levelNumber == 2) {
-		renderText(renderer, "Level one Complete", font, whiteColor, SCREEN_OFFSET, delay);
-		renderText(renderer, "Level two", font, whiteColor, SCREEN_OFFSET, delay);
+		renderText(renderer, "Level one Complete", font, whiteColor, SCREEN_VERTICAL_OFFSET, lvlCompleteDelay);
+		renderText(renderer, "Level two", font, whiteColor, SCREEN_VERTICAL_OFFSET, lnlNextDelay);
 	}
 	else {
-		renderText(renderer, "Level two Complete", font, whiteColor, SCREEN_OFFSET, delay);
-		renderText(renderer, "Boss", font, whiteColor, SCREEN_OFFSET, delay);
+		renderText(renderer, "Level two Complete", font, whiteColor, SCREEN_VERTICAL_OFFSET, lvlCompleteDelay);
+		renderText(renderer, "Level three", font, whiteColor, SCREEN_VERTICAL_OFFSET, lnlNextDelay);
 	}
 }
 
-void evaluateCollisions(
+void initLevel(int levelNumber, SDL_Renderer* renderer, Entity** ship, int* shipCount, Entity** aliens, int* alienCount) {
+	if (!*ship) {
+		*ship = createShip(renderer, *ship);
+		*shipCount = 1;
+	}
+
+	int alienVerticalCount = 0;
+	int alienHorizontalCount = 0;
+
+	switch (levelNumber) {
+	case 1:
+		alienVerticalCount = 2;
+		alienHorizontalCount = 10;
+		break;
+	case 2:
+		alienVerticalCount = 3;
+		alienHorizontalCount = 13;
+		break;
+	case 3:
+		alienVerticalCount = 4;
+		alienHorizontalCount = 16;
+		break;
+	default:
+		alienVerticalCount = 1;
+		alienHorizontalCount = 1;
+	}
+	*aliens = createAliens(renderer, *aliens, alienVerticalCount, alienHorizontalCount);
+	*alienCount = alienVerticalCount * alienHorizontalCount;
+}
+
+void evaluateBulletCollisions(
 	SDL_Renderer* renderer,
-	Object** bullets, int* bulletCount, 
-	Entity** entities, int* entitiesCount, 
+	Object** bullets, int* bulletCount,
+	Entity** entities, int* entitiesCount,
 	Animation** animations, int* animationCount,
-	Effects* effects) {
+	SoundEffect* effects) {
 	int destroyBulletsCount = 0;
 	int destroyEntitiesCount = 0;
 	Object** destroyBullets = (Object**)malloc(sizeof(Object*));
 	Entity** destroyEntities = (Entity**)malloc(sizeof(Entity*));
 
 	for (int i = 0; i < *bulletCount; i++) {
+		Object* bullet = (*bullets) + i;
 		for (int j = 0; j < *entitiesCount; j++) {
-			if (SDL_HasIntersection((*bullets)[i].imageRect, (*entities)[j].object->imageRect)) {
+			Entity* entity = (*entities) + j;
+			if (SDL_HasIntersection(bullet->imageRect, entity->object->imageRect)) {
 				// TODO: Check if alien is already add to destAliens array
 				//       - should not be necessary, should be done for bullets though
-				(*entities)[j].health -= 10;
-				if ((*entities)[j].health <= 0) {
-					if (strcmp((*entities)[j].object->imageName, GET_RESOURCE_PATH("shipInvaders.png")) == 0) {
-						Mix_PlayChannel(-1, effects->explosion, 0);
-					}
-					else
-					{
-						Mix_PlayChannel(-1, effects->invaderkilled, 0);
-					}
+				entity->health -= 10;
+				if (entity->health <= 0) {
+					//					if (strcmp(entity->object->imageName, GET_RESOURCE_PATH("shipInvaders.png")) == 0) {
+					Mix_PlayChannel(-1, effects->explosion, 0);
+					//					}
+					//					else
+					//					{
+					//						Mix_PlayChannel(-1, effects->invaderkilled, 0);
+					//					}
 					destroyEntities = (Entity**)realloc(destroyEntities, (destroyEntitiesCount + 1) * sizeof(Entity*));
-					destroyEntities[destroyEntitiesCount] = &((*entities)[j]);
+					destroyEntities[destroyEntitiesCount] = entity;
 					destroyEntitiesCount++;
- 					addExplosion(renderer, (*entities)[j].object->imageRect, animations, animationCount);
+					addExplosion(renderer, entity->object->imageRect, animations, animationCount);
 				}
 
 				destroyBullets = (Object**)realloc(destroyBullets, (destroyBulletsCount + 1) * sizeof(Object*));
-				destroyBullets[destroyBulletsCount] = &((*bullets)[i]);
+				destroyBullets[destroyBulletsCount] = bullet;
 				destroyBulletsCount++;
 				break;
 			}
 		}
-		if ((*bullets)[i].imageRect->y <= 0 || (*bullets)[i].imageRect->y >= SCREEN_HEIGHT) {
+		if (bullet->imageRect->y <= 0 || bullet->imageRect->y >= SCREEN_HEIGHT) {
 			destroyBullets = (Object**)realloc(destroyBullets, (destroyBulletsCount + 1) * sizeof(Object*));
-			destroyBullets[destroyBulletsCount] = &((*bullets)[i]);
+			destroyBullets[destroyBulletsCount] = bullet;
 			destroyBulletsCount++;
 		}
 	}
@@ -162,13 +195,36 @@ void evaluateCollisions(
 	}
 }
 
+void evaluateMovementCollision(SDL_Renderer* renderer, Entity** ship, int* shipCount,
+	Entity** aliens, int* alienCount, Animation** animations, int* animationCount, SoundEffect* effects) {
+	if (*alienCount <= 0 || *shipCount <= 0 || 
+		((*aliens)[*alienCount - 1].object->imageRect->y <= PLAYER_VERTICAL_POSITION - ENTITY_SIZE)) {
+		return;
+	}
+	for (int i = 0; i < *alienCount; i++) {
+		Entity* alien = (*aliens) + i;
+		if (SDL_HasIntersection((*ship)->object->imageRect, alien->object->imageRect)) {
+			(*ship)->health = 0; // -= 10 means it would be possible for some aliens to runaway and we'd have to check for it
+			if ((*ship)->health <= 0) {
+				addExplosion(renderer, (*ship)->object->imageRect, animations, animationCount);
+				destroyEntity(ship, *ship, shipCount);
+				Mix_PlayChannel(-1, effects->explosion, 0);
+			}
+			addExplosion(renderer, alien->object->imageRect, animations, animationCount);
+			destroyEntity(aliens, alien, alienCount);
+			Mix_PlayChannel(-1, effects->invaderkilled, 0);
+			break;
+		}
+	}
+}
+
 void cleanUp(
 	Entity* ship, int* shipCount,
 	Entity* aliens, int* alienCount,
 	Animation* animations, int* animationCount,
 	Object* ship_bullets, int* shipBulletCount,
 	Object* alien_bullets, int* alienBulletCount
-	) {
+) {
 	if (ship) {
 		destroyEntity(&ship, ship, shipCount);
 	}
@@ -205,11 +261,7 @@ void gameloop(SDL_Renderer* renderer) {
 	int alienBulletCount = 0, lastAlienFiringTime = 0;
 	Object* alien_bullets = (Object*)malloc(0 * sizeof(Object));
 
-	Effects* effects = initEffects();
-
-	// variable time-step
-	int currentTicks = -1, elapsedTicks = -1, accumulatedTicks = 0, lastTicks = SDL_GetTicks();
-	int lastShipFiringTime = 0;
+	SoundEffect* effects = initSoundEffects();
 
 	// menu
 	Menu* menu = initMenu();
@@ -217,6 +269,10 @@ void gameloop(SDL_Renderer* renderer) {
 
 	int selected = MENU_SELECTED_PLAY;
 	bool keyDownHappened = true;
+
+	// variable time-step
+	int currentTicks = -1, elapsedTicks = -1, accumulatedTicks = 0, lastTicks = SDL_GetTicks();
+	int lastShipFiringTime = 0;
 
 	while (gameState != GAME_STATE_QUIT) {
 		// variable time-step
@@ -226,7 +282,7 @@ void gameloop(SDL_Renderer* renderer) {
 		lastTicks = currentTicks;
 		lastShipFiringTime += accumulatedTicks;
 		lastAlienFiringTime += accumulatedTicks;
-		
+
 		if (SDL_PollEvent(&event)) {
 			switch (event.type) {
 			case SDL_QUIT:
@@ -263,7 +319,7 @@ void gameloop(SDL_Renderer* renderer) {
 
 					if (lastAlienFiringTime >= ALIEN_FIRING_DELAY) {
 						fireBullet(renderer, aliens, &alien_bullets, &alienBulletCount, true, &alienCount);
-						lastAlienFiringTime = 10;
+						lastAlienFiringTime = 0;
 					}
 				}
 				else {
@@ -274,12 +330,13 @@ void gameloop(SDL_Renderer* renderer) {
 						destroyBullet(&alien_bullets, &alien_bullets[alienBulletCount - 1], &alienBulletCount);
 					}
 
-					if (levelNumber < 4) {
-						alienCount = ALIEN_COUNT;
-						aliens = createAliens(renderer, aliens);
-
-						renderTextLevel(renderer, levelNumber);
+					if (levelNumber < LEVEL_COUNT) {
 						levelNumber++;
+						renderTextLevel(renderer, levelNumber);
+						initLevel(levelNumber, renderer, &ship, &shipCount, &aliens, &alienCount);
+						// first render takes a long time - dirty workaround for the initial lag
+						render(renderer, ship, aliens, alienCount, animations, animationCount, ship_bullets, shipBulletCount, alien_bullets, alienBulletCount);
+						lastTicks = SDL_GetTicks();
 					}
 					else
 					{
@@ -292,14 +349,16 @@ void gameloop(SDL_Renderer* renderer) {
 				advanceAnimations(&animations, &animationCount);
 
 				moveBullets(alien_bullets, alienBulletCount, ship_bullets, shipBulletCount);
-				evaluateCollisions(renderer, &ship_bullets, &shipBulletCount, &aliens, &alienCount, &animations, &animationCount, effects);
-				evaluateCollisions(renderer, &alien_bullets, &alienBulletCount, &ship, &shipCount, &animations, &animationCount, effects);
+				evaluateBulletCollisions(renderer, &ship_bullets, &shipBulletCount, &aliens, &alienCount, &animations, &animationCount, effects);
+				evaluateBulletCollisions(renderer, &alien_bullets, &alienBulletCount, &ship, &shipCount, &animations, &animationCount, effects);
+
+				evaluateMovementCollision(renderer, &ship, &shipCount, &aliens, &alienCount, &animations, &animationCount, effects);
 
 				render(renderer, ship, aliens, alienCount, animations, animationCount, ship_bullets, shipBulletCount, alien_bullets, alienBulletCount);
 				break;
 			case GAME_STATE_MENU:
 				if (menuState == MENU_STATE_GAME_OVER || menuState == MENU_STATE_WELCOME || menuState == MENU_STATE_VICTORY) {
-					levelNumber = 1;
+					levelNumber = 0;
 					if (menuState == MENU_STATE_GAME_OVER || menuState == MENU_STATE_VICTORY) {
 						while (shipBulletCount != 0) {
 							destroyBullet(&ship_bullets, &ship_bullets[shipBulletCount - 1], &shipBulletCount);
@@ -313,6 +372,9 @@ void gameloop(SDL_Renderer* renderer) {
 						}
 						if (animationCount != 0) {
 							animations = clearAnimations(animations, &animationCount);
+						}
+						if (shipCount != 0) {
+							destroyEntity(&ship, ship, &shipCount);
 						}
 					}
 				}
@@ -328,24 +390,21 @@ void gameloop(SDL_Renderer* renderer) {
 						break;
 					case SDLK_RETURN:
 					case SDLK_KP_ENTER:
- 						gameState = selected == MENU_SELECTED_PLAY ? GAME_STATE_PLAY : GAME_STATE_QUIT;
+						gameState = selected == MENU_SELECTED_PLAY ? GAME_STATE_PLAY : GAME_STATE_QUIT;
 						if (gameState == GAME_STATE_PLAY) {
-							shipCount = 1;
-							alienCount = ALIEN_COUNT;
-
-							renderTextLevel(renderer, levelNumber);
 							levelNumber++;
+							renderTextLevel(renderer, levelNumber);
+							initLevel(levelNumber, renderer, &ship, &shipCount, &aliens, &alienCount);
 
-							ship = createShip(renderer, ship);
-							aliens = createAliens(renderer, aliens);
-
-							// first render takes a long-time, so call it here before game-time is considered to avoid big initial lag
+							// first render takes a long time - dirty workaround for the initial lag
 							render(renderer, ship, aliens, alienCount, animations, animationCount, ship_bullets, shipBulletCount, alien_bullets, alienBulletCount);
+							lastTicks = SDL_GetTicks();
+							continue;
 						}
 					}
 				}
 				renderMenu(renderer, menu, selected);
-				break;
+				break; // case GAME_STATE_MENU
 			}
 			//accumulatedTicks -= TIME_STEP;
 			accumulatedTicks = 0;
@@ -354,7 +413,6 @@ void gameloop(SDL_Renderer* renderer) {
 			SDL_Delay(DELAY);
 		}
 	}
-	// TODO: destroy all left-over textures, arrays of bullets (ship, aliens)
 	cleanUp(ship, &shipCount, aliens, &alienCount, animations, &animationCount, ship_bullets, &shipBulletCount, alien_bullets, &alienBulletCount);
 }
 

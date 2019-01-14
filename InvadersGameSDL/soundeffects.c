@@ -1,8 +1,8 @@
-#include "effects.h"
+#include "soundeffects.h"
 #include "config.h"
 
-Effects* initEffects() {
-	Effects* effects = (Effects*)malloc(sizeof(Effects));
+SoundEffect* initSoundEffects() {
+	SoundEffect* effects = (SoundEffect*)malloc(sizeof(SoundEffect));
 	effects->shoot = Mix_LoadWAV(GET_RESOURCE_PATH("sounds/shoot.wav"));
 	if (effects->shoot == NULL) {
 		printf("Failed to load shoot sound effect! SDL_mixer Error: %s\n", Mix_GetError());

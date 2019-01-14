@@ -23,14 +23,14 @@ Entity* createShip(SDL_Renderer* renderer, Entity* ship) {
 	// Set ship position and size
 	ship->object->imageRect = (SDL_Rect*)malloc(sizeof(SDL_Rect));
 	ship->object->imageRect->x = SCREEN_WIDTH / 2;
-	ship->object->imageRect->y = SCREEN_HEIGHT - (ENTITY_SIZE * 2);
+	ship->object->imageRect->y = PLAYER_VERTICAL_POSITION;
 	ship->object->imageRect->w = ENTITY_SIZE;
 	ship->object->imageRect->h = ENTITY_SIZE;
 
 	return ship;
 }
 
-void handleShipMovement(Entity* ship, const Uint8 *keystate, Object** bullets, int* bulletCount, SDL_Renderer* renderer, int* lastFiringTime, Effects* effects) {
+void handleShipMovement(Entity* ship, const Uint8 *keystate, Object** bullets, int* bulletCount, SDL_Renderer* renderer, int* lastFiringTime, SoundEffect* effects) {
 	int moveBy = PLAYER_SPEED;
 	if (keystate[SDL_SCANCODE_LEFT]) {
 		ship->object->imageRect->x -= moveBy;

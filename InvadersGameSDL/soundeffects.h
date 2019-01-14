@@ -6,6 +6,6 @@ typedef struct {
 	Mix_Chunk* shoot;
 	Mix_Chunk* explosion;
 	Mix_Chunk* invaderkilled;
-} Effects;
+} SoundEffect;
 
-Effects* initEffects();
+SoundEffect* initSoundEffects();

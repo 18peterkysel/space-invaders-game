@@ -134,7 +134,7 @@
     <ClCompile Include="aliens.c" />
     <ClCompile Include="animation.c" />
     <ClCompile Include="bullet.c" />
-    <ClCompile Include="effects.c" />
+    <ClCompile Include="soundeffects.c" />
     <ClCompile Include="entity.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="menu.c" />
@@ -159,7 +159,7 @@
     <ClInclude Include="animation.h" />
     <ClInclude Include="bullet.h" />
     <ClInclude Include="config.h" />
-    <ClInclude Include="effects.h" />
+    <ClInclude Include="soundeffects.h" />
     <ClInclude Include="entity.h" />
     <ClInclude Include="menu.h" />
     <ClInclude Include="ship.h" />

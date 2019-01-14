@@ -1,14 +1,17 @@
 #include <stdbool.h>
 #include "aliens.h"
 #include "config.h"
+#include "assert.h"
 
-Entity* createAliens(SDL_Renderer* renderer, Entity* aliens) {
+Entity* createAliens(SDL_Renderer* renderer, Entity* aliens, int verticalCount, int horizontalCount) {
+	assert (verticalCount <= 4);
+	int alienCount = verticalCount * horizontalCount;
 	if (aliens == NULL) {
-		aliens = (Entity*)malloc(ALIEN_COUNT * sizeof(Entity));
+		aliens = (Entity*)malloc(alienCount * sizeof(Entity));
 	}
 
 	// Create aliens
-	for (int i = 0; i < ALIEN_COUNT; i++) {
+	for (int i = 0; i < alienCount; i++) {
 		aliens[i].object = (Object*)malloc(sizeof(Object));
 		aliens[i].object->imageRect = (SDL_Rect*)malloc(sizeof(SDL_Rect));
 		aliens[i].health = ALIEN_HEALTH;
@@ -24,11 +27,11 @@ Entity* createAliens(SDL_Renderer* renderer, Entity* aliens) {
 
 	int rowOffset = 0;
 	// Set texture, position and size of aliens
-	for (int row = 0; row < ALIEN_VERTICAL_COUNT; row++) {
-		int indexOffset = row * ALIEN_HORIZONTAL_COUNT;
+	for (int row = 0; row < verticalCount; row++) {
+		int indexOffset = row * horizontalCount;
 		int colOffset = 2;
 		rowOffset += (ENTITY_SIZE + 2);
-		for (int col = 0; col < ALIEN_HORIZONTAL_COUNT; col++) {
+		for (int col = 0; col < horizontalCount; col++) {
 			// Set texture of alien image
 			aliens[indexOffset + col].object->imageName = imageNames[row];
 			aliens[indexOffset + col].object->imageText = IMG_LoadTexture(renderer, aliens[indexOffset + col].object->imageName);
